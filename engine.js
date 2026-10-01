@@ -115,7 +115,7 @@ catch (e) { errors.push(where + ': ' + e.message + ' (' + f + ')'); return NaN; 
 if (T === 'calculator' || T === 'simulator' || T === 'planner') {
 const inputs = Array.isArray(spec.inputs) ? spec.inputs : [];
 spec.inputs = inputs;
-if (T !== 'planner' && inputs.length < 2) errors.push('입력칸(inputs)이 2개 이상 필요해요');
+if (T !== 'planner' && !spec.table && inputs.length < 2) errors.push('입력칸(inputs)이 2개 이상 필요해요 (표가 있으면 0개도 됨)');
 if (inputs.length > 8) errors.push('입력칸은 8개 이하');
 const seen = new Set(); const vars = {};
 inputs.forEach((f, i) => {
@@ -129,9 +129,10 @@ vars[f.id] = f.default;
 if (T === 'simulator' && !inputs.some(f => f.slider)) errors.push('시뮬레이터는 슬라이더 입력이 1개 이상 필요해요');
 if (T === 'planner' && !spec.table) errors.push('배치표(planner)는 table이 필요해요');
 if (spec.table) {
+const tbStart = errors.length;
 const tb = spec.table; const cols = Array.isArray(tb.columns) ? tb.columns : []; const rows = Array.isArray(tb.rows) ? tb.rows : [];
 if (!str(tb.rowLabel, 12)) errors.push('table.rowLabel은 1~12자');
-if (cols.length < 2 || cols.length > 6) errors.push('table.columns는 2~6개');
+if (cols.length < 2 || cols.length > 8) errors.push('table.columns는 2~8개');
 if (rows.length < 2 || rows.length > 12) errors.push('table.rows는 2~12개');
 const rowVars = Object.assign({}, vars);
 cols.forEach((c, i) => {
@@ -143,7 +144,7 @@ if (c.input) rowVars[c.id] = 1;
 rows.forEach((r, i) => { if (!str(r.label, 16)) errors.push('table.rows[' + i + '].label은 1~16자'); cols.filter(c => c.input).forEach(c => { if (typeof (r.values || {})[c.id] !== 'number') errors.push('table.rows[' + i + '].values.' + c.id + ' 숫자 필요'); }); });
 cols.filter(c => !c.input).forEach((c, i) => { checkFormula(c.formula, 'table 열 ' + c.label, rowVars); rowVars[c.id] = 1; });
 if (tb.flag) { if (!str(tb.flag.text, 20)) errors.push('table.flag.text는 1~20자'); checkFormula(tb.flag.when, 'table.flag', rowVars); }
-if (!errors.length) {
+if (errors.length === tbStart) {
 try {
 const res = tableCompute(tb, vars, rows); Object.assign(vars, res.agg);
 res.rows.forEach((o, i) => cols.filter(c => !c.input).forEach(c => { if (!isFinite(o[c.id])) errors.push('표 ' + (i + 1) + '행 ' + c.label + ' 계산값이 숫자가 아니에요'); }));
