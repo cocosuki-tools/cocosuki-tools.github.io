@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>사장님 운영 툴박스</title>
+<meta name="description" content="술집·자영업 사장님이 직접 계산하고 점검해 보는 미니도구 모음. 카드뉴스 주제마다 하나씩 쌓입니다.">
+<meta property="og:title" content="사장님 운영 툴박스 | ここすき 코코스키">
+<meta property="og:description" content="카드뉴스에서 짚은 문제를 직접 계산하고 점검해 보는 도구 모음">
+<meta name="theme-color" content="#1b1b1b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@400;600&family=Noto+Serif+JP:wght@400&display=swap">
+<style>
+/* Layout: 세로 한 줄. 소개 → 최근 추가(보조 바로가기) → 고정 카테고리 바 → 카테고리별 누적 도구. 브랜드(차콜+노랑) 단일 다크 테마. */
+:root{
+color-scheme:dark;
+--bg:#1b1b1b; --panel:#222120; --line:#3a3835;
+--ink:#ece8e1; --muted:#bdb7ae; --faint:#8a847c;
+--accent:#FFCC00; --on-accent:#141414; --black:#000; --white:#fff;
+--good:#9fd39a; --warn:#f0c15a; --bad:#e8836b;
+--sans:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+--serif:'Noto Serif KR','AppleMyungjo','Batang',serif;
+--jp:'Noto Serif JP','Hiragino Mincho ProN',serif;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);margin:0}
+html{scroll-behavior:smooth}
+body{color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;word-break:keep-all;-webkit-text-size-adjust:100%;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+.wrap{max-width:640px;margin:0 auto;padding-inline:20px;padding-block:28px 64px}
+a{color:inherit}
+.logo{display:flex;justify-content:center;align-items:center;gap:12px;color:var(--muted)}
+.logo .jp{font-family:var(--jp);font-size:17px}
+.logo i{display:block;width:1px;height:20px;background:currentColor}
+.logo .kr{font-family:var(--serif);font-size:16px}
+.hero{padding-block:40px 24px;display:flex;flex-direction:column;gap:16px}
+.tag{align-self:flex-start;font-size:13px;font-weight:700;border:1.5px solid var(--ink);padding:3px 10px}
+.hero h1{margin:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px;font-size:clamp(32px,9vw,46px);font-weight:900;line-height:1.2;letter-spacing:-.02em}
+.hero h1 span{background:var(--black);color:var(--white);padding:2px 12px}
+.hero h1 span.hi{background:var(--accent);color:var(--on-accent)}
+.hero p{margin:0;font-family:var(--serif);color:var(--muted);font-size:16px;line-height:1.8}
+.stats{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--faint)}
+.stats b{color:var(--ink);font-variant-numeric:tabular-nums}
+.recent{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding-block:14px;display:flex;flex-direction:column;gap:8px}
+.recent .h{font-size:12px;font-weight:700;color:var(--faint);letter-spacing:.06em}
+.recent ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.recent a{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:baseline;text-decoration:none;padding:6px 0}
+.recent a:hover .t{color:var(--accent)}
+.recent .c{font-size:12px;color:var(--accent);font-weight:700;white-space:nowrap}
+.recent .t{font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.recent .d{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums;white-space:nowrap}
+.nav{position:sticky;top:0;z-index:5;background:var(--bg);margin-inline:-20px;margin-top:20px;padding:10px 20px;padding-top:calc(10px + env(safe-area-inset-top,0px));border-bottom:1px solid var(--line);display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav a{flex-shrink:0;text-decoration:none;font-size:14px;font-weight:500;border:1px solid var(--line);padding:6px 12px;display:flex;gap:6px;align-items:center}
+.nav a .n{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
+.nav a.cur{border-color:var(--accent);background:var(--accent);color:var(--on-accent)}
+.nav a.cur .n{color:var(--on-accent)}
+a:focus-visible,button:focus-visible,input:focus-visible,label.item:focus-within,label.opt:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.status{padding:40px 0;font-family:var(--serif);color:var(--muted);text-align:center}
+.cat{padding-top:44px;scroll-margin-top:60px;display:flex;flex-direction:column;gap:14px}
+.cat-head{display:flex;flex-direction:column;gap:4px}
+.cat-head .row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.cat-head h2{margin:0;font-size:26px;font-weight:900;line-height:1.3}
+.cat-head .cnt{font-size:13px;color:var(--faint);font-variant-numeric:tabular-nums;white-space:nowrap}
+.cat-head p{margin:0;font-family:var(--serif);color:var(--muted);font-size:15px}
+.tools{display:flex;flex-direction:column;gap:10px}
+.tool{border:1.5px solid var(--line);background:var(--bg);scroll-margin-top:64px;transition:border-color .2s,box-shadow .2s}
+.tool.open{border-color:var(--muted)}
+.tool.flash{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,204,0,.18)}
+.tool-head{width:100%;text-align:left;background:transparent;border:0;color:inherit;font:inherit;padding:16px;display:flex;flex-direction:column;gap:6px;cursor:pointer}
+.tool-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--faint)}
+.chip{font-size:12px;font-weight:700;color:var(--on-accent);background:var(--accent);padding:1px 7px}
+.tool-head h3{margin:0;font-size:19px;font-weight:700;line-height:1.4;text-wrap:balance}
+.tool-head .lead{margin:0;font-size:14px;color:var(--muted);line-height:1.6}
+.tool-head .src{font-size:12px;color:var(--faint);font-family:var(--serif)}
+.tool-head .open-btn{align-self:flex-start;margin-top:4px;font-size:13px;font-weight:700;color:var(--accent);display:flex;gap:6px;align-items:center}
+.tool-head .open-btn svg{width:12px;height:12px;transition:transform .2s}
+.tool.open .open-btn svg{transform:rotate(180deg)}
+.tool-body{padding:0 16px 18px;display:flex;flex-direction:column;gap:14px}
+.howto{margin:0;font-size:13px;color:var(--faint)}
+.note{font-size:13px;color:var(--faint);margin:0}
+.items{display:flex;flex-direction:column;gap:8px}
+label.item{display:flex;gap:12px;align-items:flex-start;padding:13px 14px;border:1.5px solid var(--line);cursor:pointer;transition:border-color .15s,background .15s}
+label.item input,label.opt input{position:absolute;opacity:0;width:1px;height:1px}
+label.item .box{width:22px;height:22px;flex-shrink:0;border:2px solid var(--ink);margin-top:2px;display:grid;place-items:center}
+label.item .box svg{width:14px;height:14px;opacity:0}
+label.item .t{font-size:15px;line-height:1.5}
+label.item .t small{display:block;margin-top:2px;color:var(--faint);font-size:13px}
+label.item.on{border-color:var(--accent);background:rgba(255,204,0,.06)}
+label.item.on .box{background:var(--accent);border-color:var(--accent)}
+label.item.on .box svg{opacity:1}
+.score{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:14px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;flex-wrap:wrap}
+.score b{color:var(--ink);font-variant-numeric:tabular-nums}
+.score .msg{font-family:var(--serif);flex:1 1 220px;min-width:0}
+.mini{background:transparent;color:var(--faint);border:1px solid var(--line);font:500 12px var(--sans);padding:5px 10px;cursor:pointer}
+.mini:hover{color:var(--ink);border-color:var(--muted)}
+.calc{background:var(--panel);border:1px solid var(--line);padding:16px 14px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field.wide{grid-column:1/-1}
+.field label{font-size:13px;color:var(--muted)}
+.field .in{display:flex;align-items:center;border:1.5px solid var(--line);background:var(--bg)}
+.field input[type=text],.field input:not([type]){width:100%;min-width:0;background:transparent;border:0;color:var(--ink);font:500 17px var(--sans);padding:10px;font-variant-numeric:tabular-nums}
+.field input:focus{outline:none}
+.field .in:focus-within{border-color:var(--accent)}
+.field .u{padding-right:10px;color:var(--faint);font-size:14px;flex-shrink:0}
+.slider{display:flex;align-items:center;gap:12px}
+.slider input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
+.slider output{min-width:84px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.results{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.results .r:last-child:nth-child(odd){grid-column:1/-1}
+.r{background:var(--bg);border:1px solid var(--line);padding:12px;min-width:0}
+.r .k{font-size:12px;color:var(--muted)}
+.r .v{font-size:24px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.3;overflow-wrap:anywhere}
+.r .v.hl{color:var(--accent)}
+.r .s{font-size:12px;color:var(--faint)}
+.verdict{border-left:4px solid var(--muted);background:var(--bg);padding:12px 14px;font-family:var(--serif);font-size:15px;line-height:1.6}
+.verdict.good{border-color:var(--good)}.verdict.warn{border-color:var(--warn)}.verdict.bad{border-color:var(--bad)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--bg)}
+table.tbl{border-collapse:collapse;width:100%;min-width:420px;font-size:14px}
+.tbl th,.tbl td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tbl th{font-size:12px;color:var(--muted);font-weight:500;background:var(--panel)}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl td input{width:100%;min-width:64px;background:transparent;border:1px solid var(--line);color:var(--ink);font:500 14px var(--sans);padding:6px;text-align:right;font-variant-numeric:tabular-nums}
+.tbl td input.lbl{text-align:left;min-width:80px}
+.tbl td input:focus{outline:none;border-color:var(--accent)}
+.tbl tr.flag td{background:rgba(232,131,107,.08)}
+.tbl .fl{font-size:11px;font-weight:700;color:var(--bad);display:block}
+.tbl .x{background:transparent;border:0;color:var(--faint);cursor:pointer;font-size:16px;padding:0 4px}
+.totals{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:var(--muted)}
+.totals b{color:var(--ink);font-variant-numeric:tabular-nums}
+.qs{display:flex;flex-direction:column;gap:16px}
+.q{display:flex;flex-direction:column;gap:8px}
+.q .qt{font-size:15px;line-height:1.5}
+.q .qt small{color:var(--faint);font-size:12px;margin-right:6px}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+label.opt{border:1.5px solid var(--line);padding:7px 12px;font-size:14px;cursor:pointer}
+label.opt.on{border-color:var(--accent);background:var(--accent);color:var(--on-accent);font-weight:700}
+.diag-out{border:1.5px solid var(--accent);padding:16px;display:flex;flex-direction:column;gap:12px}
+.diag-out .big{display:flex;align-items:baseline;gap:8px}
+.diag-out .big b{font-size:44px;font-weight:900;color:var(--accent);line-height:1;font-variant-numeric:tabular-nums}
+.diag-out h4{margin:0;font-size:18px}
+.diag-out p{margin:0;font-family:var(--serif);color:var(--muted)}
+.bars{display:flex;flex-direction:column;gap:8px}
+.bar-row{display:grid;grid-template-columns:72px 1fr 44px;gap:10px;align-items:center;font-size:13px}
+.bar-row .bar{height:10px;border:1px solid var(--line);background:var(--bg)}
+.bar-row .bar i{display:block;height:100%;background:var(--accent)}
+.bar-row.worst .bar i{background:var(--bad)}
+.bar-row .p{text-align:right;color:var(--faint);font-variant-numeric:tabular-nums}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:28px 1fr;gap:10px;counter-increment:s}
+.steps li::before{content:counter(s);width:28px;height:28px;display:grid;place-items:center;background:var(--accent);color:var(--on-accent);font-weight:900;font-size:14px}
+.steps b{display:block;font-size:15px}
+.steps span{font-size:14px;color:var(--muted)}
+.tpl{display:flex;flex-direction:column;gap:6px}
+.tpl .lb{font-size:13px;font-weight:700;color:var(--accent)}
+.tpl pre{margin:0;white-space:pre-wrap;font:15px/1.7 var(--serif);background:var(--bg);border:1px solid var(--line);padding:12px}
+.outro{margin-top:64px;display:flex;flex-direction:column;gap:22px}
+.outro .more{font-family:var(--serif);color:var(--muted);font-size:15px;margin:0;border-top:1px solid var(--line);padding-top:20px}
+.outro .big{font-size:clamp(34px,10vw,50px);font-weight:900;line-height:1.14;letter-spacing:-.03em;color:var(--white)}
+.outro .sign{display:flex;justify-content:space-between;align-items:center;gap:12px;color:var(--muted);font-size:13px;flex-wrap:wrap}
+.outro .sign .logo{gap:8px}
+.outro .sign .logo .jp{font-size:14px}.outro .sign .logo .kr{font-size:13px}.outro .sign .logo i{height:14px}
+@media (max-width:380px){.fields{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="logo" aria-label="ここすき 코코스키"><span class="jp">ここすき</span><i></i><span class="kr">코코스키</span></div>
+<header class="hero">
+<div class="tag">저장해두고 꺼내 쓰는</div>
+<h1><span>사장님 운영</span><span class="hi">툴박스</span></h1>
+<p>카드뉴스에서 짚은 문제를 직접 계산하고 점검해 보는 도구 모음입니다. 도구는 카테고리별로 계속 쌓입니다.</p>
+<div class="stats" id="stats"></div>
+</header>
+<section class="recent" id="recent" aria-labelledby="h-recent" hidden>
+<div class="h" id="h-recent">최근 추가된 도구</div>
+<ul id="recent-list"></ul>
+</section>
+<nav class="nav" id="nav" aria-label="도구 카테고리"></nav>
+<main id="main"><p class="status" id="status">도구를 불러오는 중이에요…</p></main>
+<div class="outro">
+<p class="more">새 카드뉴스가 올라올 때마다 그 주제에 맞는 도구가 이곳에 하나씩 추가됩니다.</p>
+<div class="big">버티는 장사 말고,<br>남는 장사.</div>
+<div class="sign"><span>매일, 사장님 편에서</span><div class="logo"><span class="jp">ここすき</span><i></i><span class="kr">코코스키</span></div></div>
+</div>
+</div>
+<script src="engine.js"></script>
+<script>
+const E = ToolEngine;
+const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const md = d => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || ''); return m ? (+m[2]) + '월 ' + (+m[3]) + '일' : ''; };
+const TYPE_LABEL = { calculator:'계산기', simulator:'시뮬레이터', checklist:'점검표', diagnosis:'진단표', planner:'배치표', guide:'가이드' };
+const store = {
+get(k) { try { return JSON.parse(localStorage.getItem('cocosuki:' + k) || 'null'); } catch (e) { return null; } },
+set(k, v) { try { localStorage.setItem('cocosuki:' + k, JSON.stringify(v)); } catch (e) {} }
+};
+const CHECK = '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2 7.5l3 3 7-7" fill="none" stroke="#141414" stroke-width="2.4"/></svg>';
+const ARROW = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+const numOf = el => { const v = parseFloat(String(el.value).replace(/[^0-9.\-]/g, '')); return isFinite(v) ? v : 0; };
+const pickBand = (bands, ratio) => bands.slice().sort((a, b) => b.min - a.min).find(b => ratio >= b.min - 1e-9) || bands[0];
+/* ===== 도구 형태별 화면 ===== */
+function renderForm(root, spec, slug) {
+const ins = spec.inputs || [];
+const tb = spec.table ? JSON.parse(JSON.stringify(spec.table)) : null;
+const id = k => slug + '__' + k;
+let html = spec.howTo ? `<p class="howto">${esc(spec.howTo)}</p>` : '';
+html += '<div class="calc">';
+if (ins.length) html += '<div class="fields">' + ins.map(f => f.slider
+? `<div class="field wide"><label for="${id(f.id)}">${esc(f.label)}</label><div class="slider"><input type="range" id="${id(f.id)}" data-k="${f.id}" min="${f.min}" max="${f.max}" step="${f.step || 1}" value="${f.default}"><output id="${id(f.id)}-o"></output></div></div>`
+: `<div class="field"><label for="${id(f.id)}">${esc(f.label)}</label><div class="in"><input id="${id(f.id)}" data-k="${f.id}" inputmode="decimal" value="${f.default}">${f.unit ? `<span class="u">${esc(f.unit)}</span>` : ''}</div></div>`).join('') + '</div>';
+if (tb) html += `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>${esc(tb.rowLabel)}</th>${tb.columns.map(c => `<th>${esc(c.label)}${c.unit ? ` (${esc(c.unit)})` : ''}</th>`).join('')}${tb.canAddRows ? '<th></th>' : ''}</tr></thead><tbody></tbody></table></div>${tb.canAddRows ? '<button class="mini add" type="button">+ 줄 추가</button>' : ''}<div class="totals"></div>`;
+if ((spec.outputs || []).length) html += '<div class="results">' + spec.outputs.map((o, i) => `<div class="r"><div class="k">${esc(o.label)}</div><div class="v${o.highlight ? ' hl' : ''}" data-o="${i}">-</div>${o.hint ? `<div class="s">${esc(o.hint)}</div>` : ''}</div>`).join('') + '</div>';
+if ((spec.verdicts || []).length) html += '<div class="verdict" aria-live="polite"></div>';
+if (spec.note) html += `<p class="note">${esc(spec.note)}</p>`;
+html += '<p class="note">예시 숫자가 들어 있어요. 우리 가게 숫자로 바꿔보세요.</p></div>';
+root.innerHTML = html;
+const body = tb && root.querySelector('tbody');
+function drawRows() {
+body.innerHTML = tb.rows.map((r, ri) => `<tr data-r="${ri}"><td>${tb.canAddRows ? `<input class="lbl" data-row="${ri}" data-c="__label" value="${esc(r.label)}" aria-label="${esc(tb.rowLabel)}">` : esc(r.label)}<span class="fl"></span></td>${tb.columns.map(c => c.input
+? `<td><input data-row="${ri}" data-c="${c.id}" inputmode="decimal" value="${(r.values || {})[c.id] ?? 0}" aria-label="${esc(r.label + ' ' + c.label)}"></td>`
+: `<td data-cell="${c.id}">-</td>`).join('')}${tb.canAddRows ? `<td><button class="x" type="button" data-del="${ri}" aria-label="이 줄 지우기">×</button></td>` : ''}</tr>`).join('');
+}
+function calc() {
+const vals = {};
+ins.forEach(f => { const el = root.querySelector(`[data-k="${f.id}"]`); vals[f.id] = numOf(el); if (f.slider) root.querySelector('#' + CSS.escape(id(f.id)) + '-o').textContent = Number(vals[f.id]).toLocaleString('ko-KR') + (f.unit || ''); });
+let v = Object.assign({}, vals);
+try {
+if (tb) {
+const res = E.tableCompute(tb, vals, tb.rows);
+Object.assign(v, res.agg);
+res.rows.forEach((o, ri) => {
+const tr = body.querySelector(`tr[data-r="${ri}"]`); if (!tr) return;
+tb.columns.filter(c => !c.input).forEach(c => { tr.querySelector(`[data-cell="${c.id}"]`).textContent = E.fmt(o[c.id], c.format, c.unit); });
+tr.classList.toggle('flag', !!o.__flag); tr.querySelector('.fl').textContent = o.__flag ? tb.flag.text : '';
+});
+root.querySelector('.totals').innerHTML = (tb.totals || []).map(t => { const r = E.evaluate(t.formula, v); if (t.id) v[t.id] = r; return `<span>${esc(t.label)} <b>${E.fmt(r, t.format, t.unit)}</b></span>`; }).join('');
+}
+(spec.outputs || []).forEach((o, i) => { let r; try { r = E.evaluate(o.formula, v); } catch (e) { r = NaN; } if (o.id) v[o.id] = r; root.querySelector(`[data-o="${i}"]`).textContent = E.fmt(r, o.format, o.unit); });
+const vd = root.querySelector('.verdict');
+if (vd) { const hit = spec.verdicts.find(d => { try { return E.evaluate(d.when, v); } catch (e) { return false; } }); vd.className = 'verdict ' + (hit ? hit.tone : ''); vd.textContent = hit ? hit.text : ''; vd.hidden = !hit; }
+} catch (e) { /* 입력 중 잠깐 생기는 빈 값은 무시 */ }
+}
+if (tb) {
+drawRows();
+body.addEventListener('input', e => { const t = e.target; if (!t.dataset.row) return; const r = tb.rows[+t.dataset.row]; if (t.dataset.c === '__label') r.label = t.value; else { r.values = r.values || {}; r.values[t.dataset.c] = numOf(t); } calc(); });
+body.addEventListener('click', e => { const b = e.target.closest('[data-del]'); if (!b || tb.rows.length <= 1) return; tb.rows.splice(+b.dataset.del, 1); drawRows(); calc(); });
+const add = root.querySelector('.add');
+if (add) add.addEventListener('click', () => { const last = tb.rows[tb.rows.length - 1] || { values: {} }; tb.rows.push({ label: '새 줄', values: Object.assign({}, last.values) }); drawRows(); calc(); });
+}
+root.querySelector('.calc').addEventListener('input', e => { if (e.target.dataset.k) calc(); });
+calc();
+}
+function renderChecklist(root, spec, slug) {
+const items = spec.items || [];
+const st = store.get('cl:' + slug) || {};
+root.innerHTML = (spec.howTo ? `<p class="howto">${esc(spec.howTo)}</p>` : '') + `<div class="items">${items.map((it, i) => `<label class="item" for="${slug}-${i}"><input type="checkbox" id="${slug}-${i}" data-i="${i}"><span class="box">${CHECK}</span><span class="t">${esc(it.text)}${it.hint ? `<small>${esc(it.hint)}</small>` : ''}</span></label>`).join('')}</div>
+<div class="score"><span class="msg"></span><span><b class="sc">0</b> / ${items.length}</span><button class="mini" type="button">체크 지우기</button></div>${spec.note ? `<p class="note">${esc(spec.note)}</p>` : ''}`;
+const refresh = () => {
+let n = 0;
+root.querySelectorAll('input[type=checkbox]').forEach(el => { el.checked = !!st[el.dataset.i]; el.closest('label').classList.toggle('on', el.checked); if (el.checked) n++; });
+root.querySelector('.sc').textContent = n;
+root.querySelector('.msg').textContent = pickBand(spec.bands, items.length ? n / items.length : 0).text;
+};
+root.addEventListener('change', e => { if (e.target.type === 'checkbox') { st[e.target.dataset.i] = e.target.checked; store.set('cl:' + slug, st); refresh(); } });
+root.querySelector('.mini').addEventListener('click', () => { Object.keys(st).forEach(k => delete st[k]); store.set('cl:' + slug, st); refresh(); });
+refresh();
+}
+function renderDiagnosis(root, spec, slug) {
+const qs = spec.questions || []; const ans = store.get('dg:' + slug) || {};
+const axName = {}; spec.axes.forEach(a => { axName[a.id] = a.name; });
+root.innerHTML = (spec.howTo ? `<p class="howto">${esc(spec.howTo)}</p>` : '') + `<div class="qs">${qs.map((q, i) => `<div class="q" role="radiogroup" aria-label="${esc(q.text)}"><div class="qt"><small>${esc(axName[q.axis])}</small>${esc(q.text)}</div><div class="opts">${q.options.map((o, j) => `<label class="opt" for="${slug}-q${i}-${j}"><input type="radio" name="${slug}-q${i}" id="${slug}-q${i}-${j}" data-q="${i}" data-o="${j}">${esc(o.label)}</label>`).join('')}</div></div>`).join('')}</div>
+<div class="diag-out" aria-live="polite"></div><div class="score"><span class="msg"></span><button class="mini" type="button">답 지우기</button></div>${spec.note ? `<p class="note">${esc(spec.note)}</p>` : ''}`;
+const out = root.querySelector('.diag-out');
+const refresh = () => {
+root.querySelectorAll('input[type=radio]').forEach(el => { el.checked = ans[el.dataset.q] === +el.dataset.o; el.closest('label').classList.toggle('on', el.checked); });
+const done = qs.filter((_, i) => ans[i] != null).length;
+root.querySelector('.msg').textContent = done < qs.length ? `${qs.length}문항 중 ${done}문항 답했어요.` : '모든 문항에 답했어요.';
+if (done < qs.length) { out.hidden = true; return; }
+let got = 0, max = 0; const ax = {};
+qs.forEach((q, i) => { const best = Math.max(...q.options.map(o => o.score)); const s = q.options[ans[i]].score; got += s; max += best; ax[q.axis] = ax[q.axis] || { got: 0, max: 0 }; ax[q.axis].got += s; ax[q.axis].max += best; });
+const ratio = max ? got / max : 0; const band = pickBand(spec.bands, ratio);
+const rows = spec.axes.map(a => ({ a, p: ax[a.id] && ax[a.id].max ? ax[a.id].got / ax[a.id].max : 0 }));
+const worst = rows.slice().sort((x, y) => x.p - y.p)[0];
+out.hidden = false;
+out.innerHTML = `<div class="big"><b>${Math.round(ratio * 100)}</b><span>/ 100점</span></div><h4>${esc(band.title)}</h4><p>${esc(band.text)}</p>
+<div class="bars">${rows.map(r => `<div class="bar-row${r === worst && r.p < 1 ? ' worst' : ''}"><span>${esc(r.a.name)}</span><span class="bar"><i style="width:${Math.round(r.p * 100)}%"></i></span><span class="p">${Math.round(r.p * 100)}%</span></div>`).join('')}</div>
+${worst && worst.p < 1 ? `<p><b>가장 먼저 손볼 곳: ${esc(worst.a.name)}</b><br>${esc(spec.advice[worst.a.id])}</p>` : ''}`;
+};
+root.addEventListener('change', e => { if (e.target.type === 'radio') { ans[e.target.dataset.q] = +e.target.dataset.o; store.set('dg:' + slug, ans); refresh(); } });
+root.querySelector('.mini').addEventListener('click', () => { Object.keys(ans).forEach(k => delete ans[k]); store.set('dg:' + slug, ans); refresh(); });
+refresh();
+}
+function renderGuide(root, spec, slug) {
+const fields = spec.fields || [];
+root.innerHTML = (spec.howTo ? `<p class="howto">${esc(spec.howTo)}</p>` : '') + `<ol class="steps">${spec.steps.map(s => `<li><div><b>${esc(s.title)}</b><span>${esc(s.text)}</span></div></li>`).join('')}</ol>
+${fields.length ? `<div class="calc"><div class="fields">${fields.map(f => `<div class="field"><label for="${slug}__${f.id}">${esc(f.label)}</label><div class="in"><input type="text" id="${slug}__${f.id}" data-f="${f.id}" placeholder="${esc(f.placeholder || '')}" value="${esc(f.default || '')}"></div></div>`).join('')}</div></div>` : ''}
+${spec.templates.map((t, i) => `<div class="tpl"><span class="lb">${esc(t.label)}</span><pre data-t="${i}"></pre><button class="mini" type="button" data-copy="${i}">문구 복사</button></div>`).join('')}${spec.note ? `<p class="note">${esc(spec.note)}</p>` : ''}`;
+const fill = () => {
+const v = {}; root.querySelectorAll('[data-f]').forEach(el => { v[el.dataset.f] = el.value.trim(); });
+spec.templates.forEach((t, i) => { root.querySelector(`[data-t="${i}"]`).textContent = t.text.replace(/\{([a-z][a-z0-9_]*)\}/g, (m, k) => v[k] || ('[' + (fields.find(f => f.id === k) || {}).label + ']')); });
+};
+root.addEventListener('input', fill);
+root.addEventListener('click', e => {
+const b = e.target.closest('[data-copy]'); if (!b) return;
+const pre = root.querySelector(`[data-t="${b.dataset.copy}"]`);
+const done = () => { b.textContent = '복사했어요'; setTimeout(() => { b.textContent = '문구 복사'; }, 1600); };
+if (navigator.clipboard) navigator.clipboard.writeText(pre.textContent).then(done, () => { getSelection().selectAllChildren(pre); });
+else getSelection().selectAllChildren(pre);
+});
+fill();
+}
+const RENDER = { calculator: renderForm, simulator: renderForm, planner: renderForm, checklist: renderChecklist, diagnosis: renderDiagnosis, guide: renderGuide };
+/* ===== 허브 ===== */
+const main = document.getElementById('main'), nav = document.getElementById('nav');
+let toolBySlug = {};
+function build(data) {
+const tools = (data.tools || []).filter(t => t && t.slug && t.spec && RENDER[t.spec.toolType] && E.validate(t.spec).ok);
+const cats = (data.categories || []).slice().sort((a, b) => (a.sortOrder || 999) - (b.sortOrder || 999))
+.map(c => ({ ...c, tools: tools.filter(t => t.categorySlug === c.slug).sort((a, b) => String(b.addedDate).localeCompare(String(a.addedDate))) }))
+.filter(c => c.tools.length);
+toolBySlug = {}; cats.forEach(c => c.tools.forEach(t => { toolBySlug[t.slug] = { ...t, cat: c }; }));
+const all = Object.values(toolBySlug);
+const latest = all.map(t => t.addedDate).sort().pop() || '';
+document.getElementById('stats').innerHTML = `<span>도구 <b>${all.length}</b>개</span><span>카테고리 <b>${cats.length}</b>개</span>${latest ? `<span>마지막 추가 <b>${md(latest)}</b></span>` : ''}`;
+const recent = all.slice().sort((a, b) => String(b.addedDate).localeCompare(String(a.addedDate))).slice(0, 3);
+document.getElementById('recent-list').innerHTML = recent.map(t => `<li><a href="#${t.slug}"><span class="c">${esc(t.cat.name)}</span><span class="t">${esc(t.title)}</span><span class="d">${md(t.addedDate)}</span></a></li>`).join('');
+document.getElementById('recent').hidden = !recent.length;
+nav.innerHTML = cats.map(c => `<a href="#${c.slug}" data-cat="${c.slug}">${esc(c.name)}<span class="n">${c.tools.length}</span></a>`).join('');
+main.innerHTML = cats.map(c => `<section class="cat" id="${c.slug}" aria-labelledby="h-${c.slug}"><div class="cat-head"><div class="row"><h2 id="h-${c.slug}">${esc(c.name)}</h2><span class="cnt">도구 ${c.tools.length}개</span></div>${c.description ? `<p>${esc(c.description)}</p>` : ''}</div><div class="tools">${c.tools.map(t => `<article class="tool" id="${t.slug}"><button class="tool-head" type="button" aria-expanded="false" aria-controls="body-${t.slug}">
+<span class="tool-meta"><span class="chip">${TYPE_LABEL[t.spec.toolType]}</span><span>${md(t.addedDate)} 추가</span></span>
+<h3>${esc(t.title || t.spec.title)}</h3><p class="lead">${esc(t.spec.lead)}</p>
+${t.cardTopic ? `<span class="src">카드뉴스 ${md(t.cardDate)} · ${esc(t.cardTopic)}</span>` : ''}
+<span class="open-btn"><span class="lbl">도구 열기</span>${ARROW}</span></button><div class="tool-body" id="body-${t.slug}" hidden></div></article>`).join('')}</div></section>`).join('') || '<p class="status">아직 등록된 도구가 없어요.</p>';
+if ('IntersectionObserver' in window) {
+const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) markNav(en.target.id); }), { rootMargin: '-45% 0px -50% 0px' });
+document.querySelectorAll('.cat').forEach(s => io.observe(s));
+}
+if (location.hash) go(location.hash, false);
+}
+const rendered = {};
+function setOpen(slug, open) {
+const art = document.getElementById(slug); if (!art) return;
+const body = art.querySelector('.tool-body');
+if (open && !rendered[slug]) { const t = toolBySlug[slug]; try { RENDER[t.spec.toolType](body, t.spec, slug); } catch (e) { body.innerHTML = '<p class="note">이 도구를 불러오지 못했어요.</p>'; } rendered[slug] = true; }
+body.hidden = !open; art.classList.toggle('open', open);
+art.querySelector('.tool-head').setAttribute('aria-expanded', String(open));
+art.querySelector('.open-btn .lbl').textContent = open ? '접기' : '도구 열기';
+}
+function markNav(slug) { nav.querySelectorAll('a').forEach(a => a.classList.toggle('cur', a.dataset.cat === slug)); const cur = nav.querySelector('.cur'); if (cur) cur.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+function go(hash, smooth) {
+const id = decodeURIComponent(String(hash || '').replace(/^#/, '')); if (!id) return;
+const el = document.getElementById(id); if (!el) return;
+if (toolBySlug[id]) { setOpen(id, true); markNav(toolBySlug[id].cat.slug); el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 2200); }
+else if (el.classList.contains('cat')) markNav(id);
+el.scrollIntoView({ block: 'start', behavior: smooth ? 'smooth' : 'auto' });
+}
+main.addEventListener('click', e => { const h = e.target.closest('.tool-head'); if (!h) return; const art = h.closest('.tool'); setOpen(art.id, art.querySelector('.tool-body').hidden); });
+document.addEventListener('click', e => { const a = e.target.closest('a[href^="#"]'); if (!a) return; e.preventDefault(); go(a.getAttribute('href'), true); try { history.replaceState(null, '', a.getAttribute('href')); } catch (err) {} });
+window.addEventListener('hashchange', () => go(location.hash, true));
+fetch('tools.json?v=' + Date.now(), { cache: 'no-store' })
+.then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+.then(build)
+.catch(() => { main.innerHTML = '<p class="status">도구 목록을 불러오지 못했어요. 잠시 뒤 새로고침해 주세요.</p>'; });
+</script>
+</body>
+</html>
